@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -18,33 +17,17 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $email = $request->get('email');
-        $password = $request->get('password');
-        
-        $user = User::where('email', $email)->first();
-
-        if (! $user || ! Hash::check($password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['As credenciais estão incorretas.'],
-            ]);
-        }
-
         $credentials = $request->only(['email', 'password']);
-        $token = JWTAuth::attempt($credentials);
-
-        if (!$token) {
-            return response()->json(['error' => 'Credenciais inválidas'], 401);
-        }
         
+        if (!$token = JWTAuth::attempt($credentials)) {
+            return response()->json([
+                'message' => 'Email ou senha incorretos'
+            ], 401);
+        }
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'Bearer',
-            // 'user' => [
-            //     'id' => $user->id,
-            //     'name' => $user->name,
-            //     'email' => $user->email,
-            //     'profile_image_url' => $user->profile_image_url,
-            // ]
         ]);
     }
 

@@ -3,8 +3,15 @@ import 'package:gbook_mobile/theme/app_theme.dart';
 
 class ExpandableMenu extends StatefulWidget {
   final Widget child;
+  final bool isDarkTheme;
+  final VoidCallback onThemeToggle;
 
-  const ExpandableMenu({super.key, required this.child});
+  const ExpandableMenu({
+    super.key, 
+    required this.child,
+    required this.isDarkTheme,
+    required this.onThemeToggle,
+  });
 
   @override
   ExpandableMenuState createState() => ExpandableMenuState();
@@ -46,7 +53,10 @@ class ExpandableMenuState extends State<ExpandableMenu> with SingleTickerProvide
                 ListTile(
                   title: Text(
                     'Home',
-                    style: AppTheme.bodyLarge,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white, // Sempre branco no menu lateral
+                    ),
                   ),
                   onTap: () {
                     Navigator.pushNamed(context, '/home');
@@ -54,8 +64,11 @@ class ExpandableMenuState extends State<ExpandableMenu> with SingleTickerProvide
                 ),
                 ListTile(
                   title: Text(
-                    'Biblioteca', 
-                    style: AppTheme.bodyLarge
+                    'Biblioteca',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white, // Sempre branco no menu lateral
+                    ),
                   ),
                   onTap: () {
                     Navigator.pushNamed(context, '/biblioteca');
@@ -63,15 +76,15 @@ class ExpandableMenuState extends State<ExpandableMenu> with SingleTickerProvide
                 ),
                 ListTile(
                   title: Text(
-                    'Perfil', 
-                    style: AppTheme.bodyLarge
-                  )
-                ),
-                ListTile(
-                  title: Text(
-                    'Livros salvos', 
-                    style: AppTheme.bodyLarge
-                  )
+                    'Adicionar livro',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white, // Sempre branco no menu lateral
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/addBook');
+                  },
                 ),
               ],
             ),
@@ -88,13 +101,32 @@ class ExpandableMenuState extends State<ExpandableMenu> with SingleTickerProvide
             elevation: 8,
             child: Column(
               children: [
-                // Aqui você vai injetar a AppBar depois
                 Expanded(child: widget.child),
               ],
             ),
           ),
         ),
+        // Botão de alternância de tema
+        Positioned(
+          bottom: 20,
+          left: 20,
+          child: FloatingActionButton(
+            mini: true,
+            backgroundColor: AppTheme.primary,
+            onPressed: widget.onThemeToggle,
+            child: Icon(
+              widget.isDarkTheme ? Icons.light_mode : Icons.dark_mode,
+              color: Colors.white,
+            ),
+          ),
+        ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }

@@ -5,6 +5,7 @@ import '../widgets/app_bar.dart';
 import '../widgets/expandable_menu.dart';
 import '../widgets/app_carousel.dart';
 import '../widgets/books/recent_books.dart';
+import '../theme/theme_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,20 +29,25 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = ThemeProvider.of(context);
+
     return ExpandableMenu(
       key: _menuKey,
+      isDarkTheme: themeProvider?.isDarkTheme ?? true,
+      onThemeToggle: themeProvider?.onThemeToggle ?? () {},
       child: Scaffold(
         appBar: CustomAppBar(
           onMenuPressed: () {
             _menuKey.currentState?.toggleMenu();
           },
         ),
-        body: Column(
-          children: [
-            AppCarousel(),
-            BookList(booksFuture: _books),
-            
-          ],
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              AppCarousel(),
+              BookCarousel(booksFuture: _books),
+            ],
+          ),
         ),
       ),
     );

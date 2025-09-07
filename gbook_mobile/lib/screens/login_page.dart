@@ -1,34 +1,49 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_logo.dart';
+import '../shared/organisms/login_form.dart';
 import '../routes/app_routes.dart';
 import '../theme/app_theme.dart';
-import '../widgets/app_logo.dart';
+import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
   bool isLoading = false;
 
-  void handleLogin() {
-    setState(() {
-      isLoading = true; // mostra "Carregando…" 
-    });
+  final authService = AuthService(baseUrl: "http://127.0.0.1:8000/api");
 
-    // simula login
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        isLoading = false; // volta ao normal
-      });
+  void handleLogin() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
 
-      // navega pra HomePage
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos')),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final result = await authService.login(email, password);
+      print("Login sucesso: $result");
+
       Navigator.pushReplacementNamed(context, AppRoutes.home);
-    });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: $e')),
+      );
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -37,57 +52,17 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: AppTheme.background,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(140),
+          padding: const EdgeInsets.all(32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const AppLogo(size: 100),
               const SizedBox(height: 32),
-              TextField(
-                controller: emailController,
-                style: const TextStyle(color: Colors.white), // texto digitado branco
-                decoration: InputDecoration(
-                  hintText: 'Digite seu email',                 // placeholder
-                  hintStyle: const TextStyle(color: Colors.white70), // cor do placeholder
-                  labelText: 'Email',
-                  labelStyle: const TextStyle(color: Colors.white),  // label branca
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.white), // borda branca quando não focado
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.white, width: 2), // borda branca quando focado
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Digite sua senha',
-                  hintStyle: const TextStyle(color: Colors.white70),
-                  labelText: 'Senha',
-                  labelStyle: const TextStyle(color: Colors.white),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.white),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: const BorderSide(color: Colors.white, width: 2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: isLoading ? null : handleLogin,
-                  child: Text(isLoading ? 'Carregando…' : 'Login'),
-                ),
+              LoginForm(
+                emailController: emailController,
+                passwordController: passwordController,
+                isLoading: isLoading,
+                onLogin: handleLogin,
               ),
             ],
           ),
