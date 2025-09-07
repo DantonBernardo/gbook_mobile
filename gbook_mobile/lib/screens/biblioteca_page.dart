@@ -4,6 +4,7 @@ import '../models/book.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/expandable_menu.dart';
 import '../widgets/books/all_books.dart';
+import '../theme/theme_provider.dart';
 
 class BibliotecaPage extends StatefulWidget {
   const BibliotecaPage({super.key});
@@ -22,21 +23,29 @@ class _BibliotecaPageState extends State<BibliotecaPage> {
   @override
   void initState() {
     super.initState();
-    _books = _bookService.fetchRecentBooks();
+    _books = _bookService.fetchAllBooks();
   }
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = ThemeProvider.of(context);
+
     return ExpandableMenu(
       key: _menuKey,
+      isDarkTheme: themeProvider?.isDarkTheme ?? true,
+      onThemeToggle: themeProvider?.onThemeToggle ?? () {},
       child: Scaffold(
         appBar: CustomAppBar(
           onMenuPressed: () {
             _menuKey.currentState?.toggleMenu();
           },
         ),
-        body: Column(
-          children: [Expanded(child: BookList(booksFuture: _books))],
+        body: SingleChildScrollView( // scroll único pra toda a página
+          child: Column(
+            children: [
+              BookList(booksFuture: _books), // primeiro BookList
+            ],
+          ),
         ),
       ),
     );
