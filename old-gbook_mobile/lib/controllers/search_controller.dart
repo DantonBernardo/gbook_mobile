@@ -11,7 +11,7 @@ class SearchController {
     // Cancela o timer anterior se existir
     _debounceTimer?.cancel();
     
-    // Cria um novo timer com 2 segundos de delay
+    // Cria um novo timer com 1 segundo de delay
     _debounceTimer = Timer(const Duration(seconds: 1), () {
       _searchController.add(query);
     });

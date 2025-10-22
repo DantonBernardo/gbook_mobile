@@ -55,79 +55,78 @@ class BookController extends Controller
     // }
 
     public function store(Request $request)
-{
-    try {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'required|string|max:400',
-            'cover' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'pdf_url' => [
-                'required',
-                'starts_with:http,https',
-                'url',
-                function ($attribute, $value, $fail) {
-                    if (str_starts_with(strtolower($value), 'javascript:')) {
-                        $fail('Links com "javascript:" não são permitidos.');
-                    }
-                },
-            ],
-        ],[
-            'title.required' => 'O título é obrigatório.',
-            'title.string' => 'O título deve ser um texto válido.',
-            'title.max' => 'O título deve ter no máximo 255 caracteres.',
+    {
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'required|string|max:400',
+                'cover' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'pdf_url' => [
+                    'required',
+                    'starts_with:http,https',
+                    'url',
+                    function ($attribute, $value, $fail) {
+                        if (str_starts_with(strtolower($value), 'javascript:')) {
+                            $fail('Links com "javascript:" não são permitidos.');
+                        }
+                    },
+                ],
+            ], [
+                'title.required' => 'O título é obrigatório.',
+                'title.string' => 'O título deve ser um texto válido.',
+                'title.max' => 'O título deve ter no máximo 255 caracteres.',
 
-            'description.required' => 'A descrição é obrigatória.',
-            'description.string' => 'A descrição deve ser um texto válido.',
-            'description.max' => 'A descrição deve ter no máximo 400 caracteres.',
+                'description.required' => 'A descrição é obrigatória.',
+                'description.string' => 'A descrição deve ser um texto válido.',
+                'description.max' => 'A descrição deve ter no máximo 400 caracteres.',
 
-            'cover.image' => 'A capa deve ser uma imagem válida.',
-            'cover.mimes' => 'A capa deve estar no formato JPEG, PNG ou JPG.',
-            'cover.max' => 'A imagem da capa deve ter no máximo 2MB.',
+                'cover.image' => 'A capa deve ser uma imagem válida.',
+                'cover.mimes' => 'A capa deve estar no formato JPEG, PNG ou JPG.',
+                'cover.max' => 'A imagem da capa deve ter no máximo 2MB.',
 
-            'pdf_url.required' => 'O link do PDF é obrigatório.',
-            'pdf_url.starts_with' => 'O link do PDF deve começar com http ou https.',
-            'pdf_url.url' => 'O link do PDF deve ser uma URL válida.',
-        ]);
+                'pdf_url.required' => 'O link do PDF é obrigatório.',
+                'pdf_url.starts_with' => 'O link do PDF deve começar com http ou https.',
+                'pdf_url.url' => 'O link do PDF deve ser uma URL válida.',
+            ]);
 
-        // TEMPORÁRIO: Comentar a autenticação para teste
-        // $user = JWTAuth::user();
-        // if (!$user) {
-        //     return response()->json(['message' => 'Usuário não autenticado'], 401);
-        // }
+            // TEMPORÁRIO: Comentar a autenticação para teste
+            // $user = JWTAuth::user();
+            // if (!$user) {
+            //     return response()->json(['message' => 'Usuário não autenticado'], 401);
+            // }
 
-        // Verifica se foi enviada uma imagem de capa
-        if ($request->hasFile('cover')) {
-            $path = $request->file('cover')->store('book_covers', 'public');
-            $validated['cover'] = $path;
-        } else {
-            $validated['cover'] = null;
+            // Verifica se foi enviada uma imagem de capa
+            if ($request->hasFile('cover')) {
+                $path = $request->file('cover')->store('book_covers', 'public');
+                $validated['cover'] = $path;
+            } else {
+                $validated['cover'] = null;
+            }
+
+            // TEMPORÁRIO: Usar um user_id fixo para teste
+            $validated['user_id'] = 1; // ou qualquer ID de usuário existente
+
+            $book = Book::create($validated);
+
+            return response()->json([
+                'message' => 'Livro criado com sucesso!',
+                'data' => $book,
+            ], 201);
+        } catch (ValidationException $e) {
+            $errors = $e->errors();
+            $firstErrorMessage = collect($errors)->flatten()->first();
+
+            return response()->json([
+                'message' => $firstErrorMessage ?? 'Erro de validação',
+                'errors' => $errors,
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erro ao cadastrar o livro.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
-
-        // TEMPORÁRIO: Usar um user_id fixo para teste
-        $validated['user_id'] = 1; // ou qualquer ID de usuário existente
-
-        $book = Book::create($validated);
-
-        return response()->json([
-            'message' => 'Livro criado com sucesso!',
-            'data' => $book,
-        ], 201);
-
-    } catch (ValidationException $e) {
-        $errors = $e->errors();
-        $firstErrorMessage = collect($errors)->flatten()->first();
-
-        return response()->json([
-            'message' => $firstErrorMessage ?? 'Erro de validação',
-            'errors' => $errors,
-        ], 422);
-    } catch (\Exception $e) {
-        return response()->json([
-            'message' => 'Erro ao cadastrar o livro.',
-            'error' => $e->getMessage(),
-        ], 500);
     }
-}
 
     public function update(Request $request, string $id)
     {
@@ -157,7 +156,7 @@ class BookController extends Controller
                         }
                     },
                 ],
-            ],[
+            ], [
                 'title.required' => 'O título é obrigatório.',
                 'title.string' => 'O título deve ser um texto válido.',
                 'title.max' => 'O título deve ter no máximo 255 caracteres.',
@@ -175,14 +174,14 @@ class BookController extends Controller
                 'pdf_url.url' => 'O link do PDF deve ser uma URL válida.',
             ]);
 
-    
+
             // Tratamento da capa (se for enviada)
             if ($request->hasFile('cover')) {
                 // Remove a capa antiga se existir
                 if ($book->cover) {
                     Storage::disk('public')->delete($book->cover);
                 }
-                
+
                 // Armazena a nova imagem
                 $path = $request->file('cover')->store('book_covers', 'public');
                 $validated['cover'] = $path;
@@ -195,7 +194,6 @@ class BookController extends Controller
                 'message' => 'Livro atualizado com sucesso!',
                 'data' => $book->makeHidden(['cover']),
             ]);
-
         } catch (ValidationException $e) {
             $errors = $e->errors();
             $firstErrorMessage = collect($errors)->flatten()->first(); // pega a primeira mensagem
@@ -220,13 +218,13 @@ class BookController extends Controller
     {
         try {
             $book = Book::findOrFail($id);
-            
+
             // Verifica se o usuário tem permissão para deletar
             $user = JWTAuth::user();
             if ($book->user_id !== $user->id) {
                 return response()->json(['message' => 'Não autorizado'], 403);
             }
-            
+
             // Remove a imagem do storage se existir
             if ($book->cover && Storage::disk('public')->exists($book->cover)) {
                 $currentPath = $book->cover;
@@ -239,15 +237,14 @@ class BookController extends Controller
                 $book->cover = $newPath;
                 $book->save();
             }
-            
+
             // Faz o soft delete
             $book->delete();
-            
+
             return response()->json([
                 'message' => 'Livro movido para a lixeira com sucesso!',
                 'book_id' => $id
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao deletar o livro',
@@ -272,12 +269,11 @@ class BookController extends Controller
                 $book->save();
             }
             $book->restore();
-            
+
             return response()->json([
                 'message' => 'Livro restaurado com sucesso!',
                 'book_id' => $id
             ]);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao restaurar o livro',
@@ -291,7 +287,7 @@ class BookController extends Controller
     {
         try {
             $user = JWTAuth::user();
-            
+
             if (!$user) {
                 return response()->json(['message' => 'Não autenticado'], 401);
             }
@@ -303,7 +299,6 @@ class BookController extends Controller
                 ->makeHidden(['cover']);
 
             return response()->json($books);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Erro ao recuperar livros da lixeira',
@@ -322,24 +317,23 @@ class BookController extends Controller
             }
 
             $book = Book::onlyTrashed()->findOrFail($id);
-            
+
             // Verifica se o livro pertence ao usuário
             if ($book->user_id !== $user->id) {
                 return response()->json(['message' => 'Não autorizado'], 403);
             }
-            
+
             // Remove a imagem do storage se existir
             if ($book->cover && Storage::disk('public')->exists($book->cover)) {
                 Storage::disk('public')->delete($book->cover);
             }
 
             $book->forceDelete();
-            
+
             return response()->json([
                 'message' => 'Livro deletado permanentemente com sucesso!',
                 'book_id' => $id
             ]);
-            
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json([
                 'message' => 'Livro não encontrado na lixeira'
