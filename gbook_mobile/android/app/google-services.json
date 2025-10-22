@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "694258853647",
+    "project_id": "gbookflutter",
+    "storage_bucket": "gbookflutter.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:694258853647:android:fd8843ed473d91b3ac007a",
+        "android_client_info": {
+          "package_name": "com.example.gbook_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0T4TruRFwHBgQtS9k0Z4VH-EF7NQ4z8k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

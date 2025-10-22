@@ -1,40 +1,59 @@
 import 'package:flutter/material.dart';
-import 'theme/app_theme.dart';
-import 'routes/app_routes.dart';
-import '../../theme/theme_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-void main() {  
+import 'firebase_options.dart';
+import 'presentation/pages/login_page.dart';
+import 'presentation/pages/all_books_page.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'GBook',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      ),
+      debugShowCheckedModeBanner: false,
+      home: const AuthGate(),
+    );
+  }
 }
 
-class _MyAppState extends State<MyApp> {
-  bool isDarkTheme = true;
-
-  void toggleTheme() {
-    setState(() {
-      isDarkTheme = !isDarkTheme;
-    });
-  }
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ThemeProvider(
-      isDarkTheme: isDarkTheme,
-      onThemeToggle: toggleTheme,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'GBook',
-        theme: isDarkTheme ? AppTheme.darkTheme : AppTheme.lightTheme,
-        initialRoute: AppRoutes.login,
-        routes: AppRoutes.routes,
-      ),
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        // 🌀 Carregando inicialização
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // ✅ Usuário logado
+        if (snapshot.hasData) {
+          return const AllBooksPage();
+        }
+
+        // 🚪 Usuário deslogado
+        return const LoginPage();
+      },
     );
   }
 }
