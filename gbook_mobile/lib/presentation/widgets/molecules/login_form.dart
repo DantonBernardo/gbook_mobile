@@ -25,6 +25,8 @@ class _LoginFormState extends State<LoginForm> {
         } else if (state is LoginSuccess) {
           ScaffoldMessenger.of(context)
               .showSnackBar(const SnackBar(content: Text('Login realizado!')));
+          
+          Navigator.pushReplacementNamed(context, '/all-books');
         }
       },
       builder: (context, state) {
@@ -34,17 +36,20 @@ class _LoginFormState extends State<LoginForm> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             CustomTextField(
+              key: const Key('emailField'),
               hint: 'E-mail',
               controller: emailController,
             ),
             const SizedBox(height: 16),
             CustomTextField(
+              key: const Key('passwordField'),
               hint: 'Senha',
               obscureText: true,
               controller: passwordController,
             ),
             const SizedBox(height: 24),
             CustomButton(
+              key: const Key('loginButton'),
               text: 'Entrar',
               loading: loading,
               onPressed: () {

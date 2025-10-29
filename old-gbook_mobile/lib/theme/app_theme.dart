@@ -62,11 +62,9 @@ class AppTheme {
       primary: primary,
       secondary: secondary,
       surface: background,
-      background: background,
       onPrimary: Colors.white,
       onSecondary: Colors.black,
       onSurface: textPrimary,
-      onBackground: textPrimary,
     ),
     textTheme: const TextTheme(
       headlineLarge: headlineLargeDark,
@@ -124,11 +122,9 @@ class AppTheme {
       primary: primary,
       secondary: secondary,
       surface: lightBackground,
-      background: lightBackground,
       onPrimary: Colors.white,
       onSecondary: Colors.black,
       onSurface: lightTextPrimary,
-      onBackground: lightTextPrimary,
     ),
     textTheme: const TextTheme(
       headlineLarge: headlineLargeLight,
