@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gbook_mobile/theme/app_theme.dart';
+import 'presentation/routes/app_routes.dart';
 
 import 'firebase_options.dart';
 import 'presentation/pages/login_page.dart';
@@ -22,9 +24,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'GBook',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      routes: AppRoutes.routes,
+      initialRoute: '/login',
       debugShowCheckedModeBanner: false,
       home: const AuthGate(),
     );
@@ -39,19 +43,18 @@ class AuthGate extends StatelessWidget {
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
-        // 🌀 Carregando inicialização
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // ✅ Usuário logado
+        // Usuário logado
         if (snapshot.hasData) {
           return const AllBooksPage();
         }
 
-        // 🚪 Usuário deslogado
+        // Usuário deslogado
         return const LoginPage();
       },
     );

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:gbook_mobile/presentation/widgets/app_bar.dart';
 import 'package:http/http.dart' as http;
 
+import '../../theme/app_theme.dart';
 import '../../data/datasources/book_remote_datasource.dart';
 import '../../data/repositories/book_repository_impl.dart';
 import '../../domain/usecases/get_all_books.dart';
@@ -9,11 +11,25 @@ import '../bloc/books/bloc/book_bloc.dart';
 import '../bloc/books/bloc/book_event.dart';
 import '../bloc/books/bloc/book_state.dart';
 
-class AllBooksPage extends StatelessWidget {
+class AllBooksPage extends StatefulWidget {
   const AllBooksPage({super.key});
 
   @override
+  State<AllBooksPage> createState() => _AllBooksPageState();
+}
+
+class _AllBooksPageState extends State<AllBooksPage> {
+  bool _isMenuOpen = false;
+
+  void _toggleMenu() {
+    setState(() {
+      _isMenuOpen = !_isMenuOpen;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final dataSource = BookRemoteDataSourceImpl(client: http.Client());
     final repository = BookRepositoryImpl(remoteDataSource: dataSource);
     final getAllBooks = GetAllBooks(repository);
@@ -21,166 +37,138 @@ class AllBooksPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => BookBloc(getAllBooks)..add(LoadAllBooks()),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7FA),
-        appBar: AppBar(
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF6B4CE6), Color(0xFF9B59B6)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
-          title: const Text(
-            'Biblioteca',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          centerTitle: true,
+        appBar: CustomAppBar(
+          onMenuPressed: _toggleMenu,
         ),
-        body: BlocBuilder<BookBloc, BookState>(
-          builder: (context, state) {
-            if (state is BookLoading) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
+        body: Stack(
+          children: [
+            // Conteúdo principal
+            BlocBuilder<BookBloc, BookState>(
+              builder: (context, state) {
+                if (state is BookLoading) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primary.withOpacity(0.1),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: const CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Carregando livros...',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                } else if (state is BookLoaded) {
+                  final books = state.books;
+                  
+                  if (books.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.menu_book_rounded,
+                            size: 80,
+                            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Nenhum livro encontrado',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
-                      child: const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF6B4CE6)),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Carregando livros...',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Color(0xFF6B4CE6),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            } else if (state is BookLoaded) {
-              final books = state.books;
-              
-              if (books.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.menu_book_rounded,
-                        size: 80,
-                        color: Colors.grey[300],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Nenhum livro encontrado',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
+                    );
+                  }
 
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: books.length,
-                itemBuilder: (context, index) {
-                  final book = books[index];
-                  return _BookCard(
-                    book: book,
-                    index: index,
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: books.length,
+                    itemBuilder: (context, index) {
+                      final book = books[index];
+                      return _BookCard(
+                        book: book,
+                        index: index,
+                      );
+                    },
                   );
-                },
-              );
-            } else if (state is BookError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.red[50],
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.error_outline,
-                          size: 60,
-                          color: Colors.red[400],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Ops! Algo deu errado',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red[700],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        state.message,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          context.read<BookBloc>().add(LoadAllBooks());
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Tentar Novamente'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6B4CE6),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
+                } else if (state is BookError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: AppTheme.error.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.error_outline,
+                              size: 60,
+                              color: AppTheme.error,
+                            ),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          const SizedBox(height: 20),
+                          Text(
+                            'Ops! Algo deu errado',
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              color: AppTheme.error,
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 8),
+                          Text(
+                            state.message,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              context.read<BookBloc>().add(LoadAllBooks());
+                            },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Tentar Novamente'),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              );
-            }
-            return const SizedBox();
-          },
+                    ),
+                  );
+                }
+                return const SizedBox();
+              },
+            ),
+
+            // Menu expansivo sobreposto
+            if (_isMenuOpen)
+              ExpandableMenu(
+                onClose: _toggleMenu,
+              ),
+          ],
         ),
       ),
     );
@@ -198,31 +186,25 @@ class _BookCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     final colors = [
-      const Color(0xFF6B4CE6),
-      const Color(0xFF3498DB),
-      const Color(0xFFE74C3C),
-      const Color(0xFF2ECC71),
-      const Color(0xFFF39C12),
-      const Color(0xFF9B59B6),
+      AppTheme.primary,
+      AppTheme.info,
+      AppTheme.error,
+      AppTheme.success,
+      AppTheme.warning,
+      AppTheme.accent,
     ];
 
     final cardColor = colors[index % colors.length];
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: cardColor.withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
+      child: Card(
+        elevation: 2,
+        shadowColor: cardColor.withOpacity(0.2),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
@@ -230,86 +212,56 @@ class _BookCard extends StatelessWidget {
           },
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: cardColor.withOpacity(0.1),
-                width: 1,
+              border: Border(
+                left: BorderSide(
+                  color: cardColor,
+                  width: 4,
+                ),
               ),
             ),
             child: Row(
               children: [
-                // Barra lateral colorida
+                const SizedBox(width: 12),
+                // Ícone do livro
                 Container(
-                  width: 6,
-                  height: 120,
+                  width: 60,
+                  height: 80,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        cardColor,
-                        cardColor.withOpacity(0.7),
+                        cardColor.withOpacity(isDark ? 0.3 : 0.15),
+                        cardColor.withOpacity(isDark ? 0.2 : 0.08),
                       ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      bottomLeft: Radius.circular(16),
-                    ),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.menu_book,
+                    color: cardColor,
+                    size: 32,
                   ),
                 ),
-                // Ícone do livro
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Container(
-                    width: 60,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          cardColor.withOpacity(0.2),
-                          cardColor.withOpacity(0.1),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.menu_book,
-                      color: cardColor,
-                      size: 32,
-                    ),
-                  ),
-                ),
+                const SizedBox(width: 16),
                 // Conteúdo
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 16,
-                      horizontal: 12,
-                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           book.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C3E50),
-                          ),
+                          style: theme.textTheme.titleLarge,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           book.description,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                            height: 1.4,
-                          ),
+                          style: theme.textTheme.bodyMedium,
                           maxLines: 3,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -319,7 +271,7 @@ class _BookCard extends StatelessWidget {
                 ),
                 // Ícone de seta
                 Padding(
-                  padding: const EdgeInsets.only(right: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Icon(
                     Icons.arrow_forward_ios,
                     color: cardColor.withOpacity(0.5),

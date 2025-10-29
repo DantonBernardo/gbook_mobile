@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../molecules/books/book_info_row.dart';
+import '../../molecules/books/book_info_row.dart';
 
 class BookCard extends StatelessWidget {
   final String title;

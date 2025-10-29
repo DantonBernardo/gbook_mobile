@@ -10,4 +10,3 @@ class SignIn {
     return repository.signIn(email: email, password: password);
   }
 }
-
