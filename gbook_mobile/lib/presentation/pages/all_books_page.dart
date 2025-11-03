@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gbook_mobile/presentation/widgets/app_bar.dart';
+import 'package:gbook_mobile/presentation/widgets/app_carousel.dart';
 import 'package:http/http.dart' as http;
 
 import '../../theme/app_theme.dart';
@@ -42,128 +43,138 @@ class _AllBooksPageState extends State<AllBooksPage> {
         ),
         body: Stack(
           children: [
-            // Conteúdo principal
-            BlocBuilder<BookBloc, BookState>(
-              builder: (context, state) {
-                if (state is BookLoading) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primary.withOpacity(0.1),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
+            // Conteúdo principal (carousel + lista)
+            Column(
+              children: [
+                // Carousel no topo
+                AppCarousel(),
+                const SizedBox(height: 8),
+                // Lista abaixo do carousel
+                Expanded(
+                  child: BlocBuilder<BookBloc, BookState>(
+                    builder: (context, state) {
+                      if (state is BookLoading) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppTheme.primary.withOpacity(0.1),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
+                                child: const CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              Text(
+                                'Carregando livros...',
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  color: AppTheme.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               ),
                             ],
                           ),
-                          child: const CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primary),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Carregando livros...',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                } else if (state is BookLoaded) {
-                  final books = state.books;
-                  
-                  if (books.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.menu_book_rounded,
-                            size: 80,
-                            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Nenhum livro encontrado',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                        );
+                      } else if (state is BookLoaded) {
+                        final books = state.books;
+                        
+                        if (books.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.menu_book_rounded,
+                                  size: 80,
+                                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Nenhum livro encontrado',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }
+                          );
+                        }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: books.length,
-                    itemBuilder: (context, index) {
-                      final book = books[index];
-                      return _BookCard(
-                        book: book,
-                        index: index,
-                      );
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: books.length,
+                          itemBuilder: (context, index) {
+                            final book = books[index];
+                            return _BookCard(
+                              book: book,
+                              index: index,
+                            );
+                          },
+                        );
+                      } else if (state is BookError) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.error.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.error_outline,
+                                    size: 60,
+                                    color: AppTheme.error,
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+                                Text(
+                                  'Ops! Algo deu errado',
+                                  style: theme.textTheme.headlineMedium?.copyWith(
+                                    color: AppTheme.error,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  state.message,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyMedium,
+                                ),
+                                const SizedBox(height: 24),
+                                ElevatedButton.icon(
+                                  onPressed: () {
+                                    context.read<BookBloc>().add(LoadAllBooks());
+                                  },
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Tentar Novamente'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                      return const SizedBox();
                     },
-                  );
-                } else if (state is BookError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              color: AppTheme.error.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.error_outline,
-                              size: 60,
-                              color: AppTheme.error,
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'Ops! Algo deu errado',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              color: AppTheme.error,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            state.message,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              context.read<BookBloc>().add(LoadAllBooks());
-                            },
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Tentar Novamente'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox();
-              },
+                  ),
+                ),
+              ],
             ),
 
-            // Menu expansivo sobreposto
+            // Menu expansivo sobreposto (permanece como estava)
             if (_isMenuOpen)
               ExpandableMenu(
                 onClose: _toggleMenu,
@@ -208,7 +219,10 @@ class _BookCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
-            // Ação ao clicar no card
+            Navigator.of(context).pushNamed(
+              '/book-detail',
+              arguments: book.id,
+            );
           },
           child: Container(
             decoration: BoxDecoration(

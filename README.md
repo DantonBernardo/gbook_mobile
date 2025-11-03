@@ -1,7 +1,7 @@
 # GBooks, sua biblioteca digital - App Mobile
 
 ## Descrição do Projeto
-Este projeto consiste em um aplicativo mobile desenvolvido em **Flutter** voltado para instituições, permitindo o acesso a uma biblioteca digital de forma prática e organizada. O objetivo desta primeira entrega parcial é apresentar a **estrutura inicial do projeto**, com a configuração básica do Flutter, implementação de navegação entre telas e layouts fundamentais.
+Este projeto consiste em um aplicativo mobile desenvolvido em **Flutter** voltado para instituições, permitindo o acesso a uma biblioteca digital de forma prática e organizada.
 
 ### CRUD de Livros
 - Atualmente, as operações implementadas são:
@@ -20,3 +20,9 @@ Este projeto consiste em um aplicativo mobile desenvolvido em **Flutter** voltad
 ### Próximos Passos
   - Implementar operações de Update e Delete no CRUD.
   - Melhorar responsividade para diferentes tamanhos de tela.
+
+---
+
+## Login para teste:
+*Email:* aluno@gmail.com
+*Senha:* 123456

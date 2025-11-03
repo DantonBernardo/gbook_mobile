@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../theme/theme_provider.dart';
+import 'package:provider/provider.dart';
+
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback onMenuPressed;
@@ -30,10 +33,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         IconButton(
           icon: const Icon(Icons.search),
           onPressed: () {
-            // TODO: Implementar busca futura
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Busca em desenvolvimento')),
-            );
+            Navigator.pushNamed(context, '/search');
           },
           tooltip: 'Buscar',
         ),
@@ -179,11 +179,6 @@ class _ExpandableMenuState extends State<ExpandableMenu>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Image.asset(
-                          'assets/images/gbook_logo.png',
-                          height: 50,
-                          fit: BoxFit.contain,
-                        ),
                         const SizedBox(height: 8),
                         Text(
                           'Menu',
@@ -214,6 +209,19 @@ class _ExpandableMenuState extends State<ExpandableMenu>
                           title: 'Criar Livro',
                           subtitle: 'Adicionar novo livro',
                           onTap: () => _navigateTo(context, '/create-book'),
+                        ),
+                        _MenuItemTile(
+                          icon: ThemeProvider().isDarkMode
+                              ? Icons.light_mode
+                              : Icons.dark_mode,
+                          title: ThemeProvider().isDarkMode
+                              ? 'Modo Claro'
+                              : 'Modo Escuro',
+                          subtitle: 'Alterar aparência',
+                          onTap: () {
+                            Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                          },
+
                         ),
                       ],
                     ),

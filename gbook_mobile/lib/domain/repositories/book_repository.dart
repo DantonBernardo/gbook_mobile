@@ -3,4 +3,6 @@ import '../entities/book.dart';
 abstract class BookRepository {
   Future<List<Book>> getRecentBooks();
   Future<List<Book>> getAllBooks();
+  Future<Book> getBookById(int id);
+  Future<List<Book>> searchBooks(String query);
 }
